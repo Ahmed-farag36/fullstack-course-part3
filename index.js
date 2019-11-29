@@ -75,4 +75,4 @@ app.post("/api/persons", (req, res) => {
 	res.status(201).json(phonebook);
 });
 
-app.listen(3001, () => console.log("Server has started..."));
+app.listen(process.env.PORT || 3001, () => console.log("Server has started..."));
