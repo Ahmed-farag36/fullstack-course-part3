@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const mongoose = require("mongoose");
 
 const personSchema = new mongoose.Schema({
@@ -7,10 +8,11 @@ const personSchema = new mongoose.Schema({
 
 const Person = mongoose.model("Person", personSchema);
 
+/* eslint-disable-next-line no-unused-vars */
 const [command, filename, password, name, phoneNumber] = process.argv;
 
 if (process.argv.length < 3) {
-	console.log(`Please enter your password`);
+	console.log("Please enter your password");
 	process.exit(1);
 }
 
@@ -26,7 +28,7 @@ if (process.argv.length === 3) {
 	Person.find()
 		.then(people => {
 			console.log(
-				`\nPhonebook:\n`,
+				"\nPhonebook:\n",
 				people.map(person => `${person.name} ${person.phoneNumber}`).join("\n")
 			);
 			mongoose.connection.close();

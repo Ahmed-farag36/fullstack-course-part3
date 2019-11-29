@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
-mongoose.set(`useFindAndModify`, false);
-mongoose.set(`useCreateIndex`, true);
+mongoose.set("useFindAndModify", false);
+mongoose.set("useCreateIndex", true);
 
 const personSchema = new mongoose.Schema({
 	name: { type: String, unique: true, minlength: 3 },

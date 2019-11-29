@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -19,7 +20,7 @@ mongoose
 	.catch(err => console.error(err));
 
 app.use(bodyParser.json());
-morgan.token("postBody", (req, res) => JSON.stringify(req.body));
+morgan.token("postBody", req => JSON.stringify(req.body));
 app.use(
 	morgan(
 		":method :url :status :res[content-length] - :response-time ms :postBody"
@@ -105,7 +106,7 @@ app.put("/api/persons/:id", (req, res, next) => {
 });
 
 // error handler
-app.use((error, req, res, next) => {
+app.use((error, req, res) => {
 	console.error(error.errors);
 	if (error.name === "CastError" && error.kind === "ObjectId") {
 		res.status(400).json({ message: "Malformed ID" });
@@ -131,7 +132,7 @@ app.use((error, req, res, next) => {
 		error.errors.number.name === "ValidatorError" &&
 		error.errors.number.kind === "minlength"
 	) {
-		res.status(400).json({ message: "Number should be 3 characters at least" });
+		res.status(400).json({ message: "Number should be 8 characters at least" });
 	} else {
 		res.end();
 	}
