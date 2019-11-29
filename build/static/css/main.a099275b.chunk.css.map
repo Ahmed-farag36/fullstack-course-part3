@@ -1,0 +1,1 @@
+{"version":3,"sources":["index.css"],"names":[],"mappings":"AAAA,OACE,iBAAkB,CAClB,QAAS,CACT,MAAO,CACP,UAAY,CACZ,WACF,CAEA,SACE,iBAAkB,CAClB,cACF","file":"main.a099275b.chunk.css","sourcesContent":["#modal {\r\n  position: absolute;\r\n  top: 10vh;\r\n  left: 0;\r\n  color: white;\r\n  width: 100vw;\r\n}\r\n\r\n#modal p {\r\n  text-align: center;\r\n  font-size: 120%;\r\n}\r\n"]}
