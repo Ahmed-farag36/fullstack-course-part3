@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
+const path = require("path");
 const app = express();
 
 app.use(bodyParser.json());
@@ -10,6 +11,7 @@ app.use(
 		":method :url :status :res[content-length] - :response-time ms :postBody"
 	)
 );
+app.use(express.static(path.join(__dirname, "build")));
 
 let phonebook = [
 	{
@@ -75,4 +77,6 @@ app.post("/api/persons", (req, res) => {
 	res.status(201).json(phonebook);
 });
 
-app.listen(process.env.PORT || 3001, () => console.log("Server has started..."));
+app.listen(process.env.PORT || 3001, () =>
+	console.log("Server has started...")
+);

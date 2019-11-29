@@ -7,7 +7,8 @@
 		"start": "node index.js",
 		"watch": "nodemon index.js",
 		"build:client": "rm -r ./build && cd ../fullstack-course/part2 && npm run build && cp -r build ../../fullstack-course_backend-part3",
-		"deploy:fullstack": "npm run build:client && git add . && git commit -m deploying... && git push heroku master",
+		"deploy:backend": "git add . && git commit -m deploying-backend... && git push heroku master",
+		"deploy:fullstack": "npm run build:client && git add . && git commit -m deploying-fullstack... && git push heroku master",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"author": "4EGA",
