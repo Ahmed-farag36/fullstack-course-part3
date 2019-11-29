@@ -1,8 +1,22 @@
+require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
 const path = require("path");
+const mongoose = require("mongoose");
+const Person = require("./models/person");
 const app = express();
+
+mongoose
+	.connect(
+		`mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0-h0r7q.mongodb.net/phonebook?retryWrites=true&w=majority`,
+		{
+			useNewUrlParser: true,
+			useUnifiedTopology: true
+		}
+	)
+	.then(() => console.log("Connected to DB..."))
+	.catch(err => console.error(err));
 
 app.use(bodyParser.json());
 morgan.token("postBody", (req, res) => JSON.stringify(req.body));
@@ -13,70 +27,114 @@ app.use(
 );
 app.use(express.static(path.join(__dirname, "build")));
 
-let phonebook = [
-	{
-		id: "1",
-		name: "First person",
-		number: "123 - 456789"
-	},
-	{
-		id: "2",
-		name: "Second person",
-		number: "123 - 456789"
-	},
-	{
-		id: "3",
-		name: "Third person",
-		number: "123 - 456789"
-	}
-];
-
 app.get("/api/persons", (req, res) => {
-	res.json(phonebook);
+	Person.find()
+		.then(phonebook => {
+			res.json(phonebook);
+		})
+		.catch(err => {
+			console.error(err);
+		});
 });
 
-app.get("/info", (req, res) => {
-	res.send(
-		`<h2>Phonebook has info for ${
-			phonebook.length
-		} people</h2><p>${new Date()}</p>`
-	);
+app.get("/api/info", (req, res) => {
+	Person.find().then(phonebook => {
+		res.send(
+			`<h2>Phonebook has info for ${
+				phonebook.length
+			} people</h2><p>${new Date()}</p>`
+		);
+	});
 });
 
-app.get("/api/persons/:id", (req, res) => {
+app.get("/api/persons/:id", (req, res, next) => {
 	const id = req.params.id;
-	const person = phonebook.find(person => person.id === id);
-	if (person) {
-		return res.json(person);
-	}
-	res.status(404).json({ message: "Person not found" });
+	Person.findById(id)
+		.then(person => {
+			if (!person) {
+				throw new Error("Person not found");
+			}
+			return res.json(person);
+		})
+		.catch(err => {
+			next(err);
+		});
 });
 
-app.delete("/api/persons/:id", (req, res) => {
+app.delete("/api/persons/:id", (req, res, next) => {
 	const id = req.params.id;
-	phonebook = phonebook.filter(person => person.id !== id);
-	res.status(204).end();
+	Person.findByIdAndDelete(id)
+		.then(() => {
+			res.status(204).end();
+		})
+		.catch(err => {
+			next(err);
+		});
 });
 
-app.post("/api/persons", (req, res) => {
+app.post("/api/persons", (req, res, next) => {
 	const { name, number } = req.body;
 	if (!name || !number) {
-		return res
-			.status(400)
-			.json({ message: `${name ? "Number" : "Name"} is required` });
-	} else if (phonebook.find(person => person.name === name)) {
-		return res.status(400).json({ message: "Name should be unique" });
+		throw new Error(`${name ? "Number" : "Name"} is required`);
 	}
-	const id = Math.round(Math.random() * 1000000);
-	const newEntry = {
-		id: id.toString(),
-		name: req.body.name,
-		number: req.body.number
-	};
-	phonebook.push(newEntry);
-	res.status(201).json(phonebook);
+	const newEntry = new Person({
+		name,
+		number
+	});
+	newEntry
+		.save()
+		.then(person => {
+			res.status(201).json(person);
+		})
+		.catch(err => next(err));
 });
 
-app.listen(process.env.PORT || 3001, () =>
-	console.log("Server has started...")
-);
+app.put("/api/persons/:id", (req, res, next) => {
+	const { id } = req.params;
+	const { number } = req.body;
+	Person.findByIdAndUpdate(id, { number }, { new: true })
+		.then(person => {
+			if (!person) {
+				throw new Error("Person not found");
+			}
+			res.json(person);
+		})
+		.catch(err => {
+			next(err);
+		});
+});
+
+// error handler
+app.use((error, req, res, next) => {
+	console.error(error.errors);
+	if (error.name === "CastError" && error.kind === "ObjectId") {
+		res.status(400).json({ message: "Malformed ID" });
+	} else if (error.message === "Person not found") {
+		res.status(404).json({ message: "Person not found" });
+	} else if (
+		error.message === "Name is required" ||
+		error.message === "Number is required"
+	) {
+		res.status(400).json({ message: error.message });
+	} else if (error.message.includes("E11000 duplicate key error collection")) {
+		res.status(400).json({ message: "Name is already in use" });
+	} else if (error.message === "Person not found") {
+		res.status(404).json({ message: "Person not found" });
+	} else if (
+		error.errors.name &&
+		error.errors.name.name === "ValidatorError" &&
+		error.errors.name.kind === "minlength"
+	) {
+		res.status(400).json({ message: "Name should be 3 characters at least" });
+	} else if (
+		error.errors.number &&
+		error.errors.number.name === "ValidatorError" &&
+		error.errors.number.kind === "minlength"
+	) {
+		res.status(400).json({ message: "Number should be 3 characters at least" });
+	} else {
+		res.end();
+	}
+});
+
+app.listen(process.env.PORT, () => console.log("Server has started..."));
