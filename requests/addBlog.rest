@@ -1,0 +1,10 @@
+POST http://localhost:3003/api/blogs HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVkZTY4NWNlMDk2YWY5MTNlNDhjMDE4MCIsInVzZXJuYW1lIjoiRGFuIEFicmFtb3YiLCJpYXQiOjE1NzUzODg2MjJ9.nOBLJOLBMe1FRU7tuUTFdeNlsMsxaSM11QFzvrE9NHg
+
+{
+  "title": "First blog post",
+  "author": "Mr blogger",
+  "url": "http://blog.com",
+  "likes": 1
+}
