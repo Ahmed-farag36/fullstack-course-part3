@@ -1,7 +1,3 @@
-const supertest = require("supertest");
-const app = require("../app");
-const api = supertest(app);
-exports.api = api;
 const mongoose = require("mongoose");
 const {
 	initialBlogs,
@@ -247,10 +243,11 @@ describe("PUT /api/blogs/:id", () => {
 	});
 
 	test("should return 403 if not the owner", async () => {
-		tokenHeader.Authorization =
-			"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVkZTdmMGQxYjcyYTA1MTdjOGQ3YTE4ZSIsInVzZXJuYW1lIjoiSGFtbyIsImlhdCI6MTU3NTQ4MTU1M30.SKscNNyIxHU8nl9vT_SvMJtpMFH9K_7Iil-Wj6JOQ2s";
-
-		const response = await updateBlog(createdBlog.body.id, tokenHeader);
+		const falseOwnerToken = {
+			Authorization:
+				"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVkZTdmMGQxYjcyYTA1MTdjOGQ3YTE4ZSIsInVzZXJuYW1lIjoiSGFtbyIsImlhdCI6MTU3NTQ4MTU1M30.SKscNNyIxHU8nl9vT_SvMJtpMFH9K_7Iil-Wj6JOQ2s"
+		};
+		const response = await updateBlog(createdBlog.body.id, falseOwnerToken);
 		expect(response.status).toBe(403);
 
 		const blogsAfter = await getAllBlogs();
@@ -258,9 +255,11 @@ describe("PUT /api/blogs/:id", () => {
 	});
 
 	test("should return 403 if not valid token", async () => {
-		tokenHeader.Authorization = tokenHeader.Authorization.replace("I", "i");
+		const notValidToken = {
+			Authorization: tokenHeader.Authorization.replace("I", "i")
+		};
 
-		const response = await updateBlog(createdBlog.body.id, tokenHeader);
+		const response = await updateBlog(createdBlog.body.id, notValidToken);
 		expect(response.status).toBe(403);
 
 		const blogsAfter = await getAllBlogs();

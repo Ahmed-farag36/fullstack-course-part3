@@ -1,6 +1,6 @@
-const Blog = require("../models/Blog");
-const User = require("../models/User");
-const { api } = require("./blogs.test");
+const supertest = require("supertest");
+const app = require("../app");
+const api = supertest(app);
 
 const initialBlogs = [
 	{
@@ -36,12 +36,6 @@ const initialUsers = [
 		name: "Ada",
 		password: "123456789",
 		blogs: []
-	},
-	{
-		username: "Bjarne Strostrup",
-		name: "Bjarne",
-		password: "123456789",
-		blogs: []
 	}
 ];
 
@@ -72,5 +66,6 @@ module.exports = {
 	postBlog,
 	deleteBlog,
 	updateBlog,
-	addUser
+	addUser,
+	api
 };

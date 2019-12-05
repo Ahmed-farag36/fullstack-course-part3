@@ -1,8 +1,6 @@
-const supertest = require("supertest");
-const app = require("../app");
-const User = require("../models/User");
 const mongoose = require("mongoose");
-const { initialUsers, getAllUsers } = require("./API_helper");
+const User = require("../models/User");
+const { initialUsers, getAllUsers, addUser } = require("./test_helper");
 
 beforeAll(async () => {
 	try {
@@ -29,7 +27,8 @@ describe("GET /api/users", () => {
 	});
 
 	test("should return list of users", async () => {
-		const users = await api.get("/api/users").expect(200);
+		const users = await getAllUsers();
+		expect(users.status).toBe(200);
 		expect(users.body.length).toBe(2);
 	});
 });
@@ -40,12 +39,6 @@ describe("POST /api/users", () => {
 		await User.deleteMany();
 		console.log(`DB cleared`);
 
-		const usersArray = initialUsers.map(
-			async user => await new User(user).save()
-		);
-		await Promise.all(usersArray);
-		console.log(`DB populated`);
-
 		newUser = {
 			username: "Ahmed Farag",
 			name: "4EGA",
@@ -54,48 +47,42 @@ describe("POST /api/users", () => {
 	});
 
 	test("should post user correctly", async () => {
-		const createdUser = await api
-			.post("/api/users")
-			.send(newUser)
-			.expect(201);
-		expect(createdUser.body.username).toBe("Ahmed Farag");
-		const usersList = await getAllUsers();
-		expect(usersList.length).toBe(3);
+		const response = await addUser(newUser);
+		expect(response.status).toBe(201);
+
+		const users = await getAllUsers();
+		expect(users.body.length).toBe(1);
 	});
 
 	test("short username return 400", async () => {
 		newUser.username = "a";
-		await api
-			.post("/api/users")
-			.send(newUser)
-			.expect(400);
-		const usersList = await getAllUsers();
-		expect(usersList.length).toBe(2);
+		const response = await addUser(newUser);
+		expect(response.status).toBe(400);
+
+		const users = await getAllUsers();
+		expect(users.body.length).toBe(0);
 	});
 
 	test("short password return 400", async () => {
 		newUser.password = "1";
-		await api
-			.post("/api/users")
-			.send(newUser)
-			.expect(400);
-		const usersList = await getAllUsers();
-		expect(usersList.length).toBe(2);
+		const response = await addUser(newUser);
+		expect(response.status).toBe(400);
+
+		const users = await getAllUsers();
+		expect(users.body.length).toBe(0);
 	});
 
 	test("duplicate username return 400", async () => {
-		const [existUser] = await getAllUsers();
-		await api
-			.post("/api/users")
-			.send(existUser)
-			.expect(400);
-		const usersList = await getAllUsers();
-		expect(usersList.length).toBe(2);
+		const { body } = await getAllUsers();
+		const existUser = body;
+		const response = await addUser(existUser);
+		expect(response.status).toBe(400);
+
+		const users = await getAllUsers();
+		expect(users.body.length).toBe(0);
 	});
 });
 
 afterAll(() => {
 	mongoose.connection.close();
 });
-
-const api = supertest(app);
